@@ -47,7 +47,7 @@ void initSPH(const unsigned int N, SimulationData &simdata)
     {
         for (float x = 0; x <= GRID_WIDTH; x += simdata.r * 0.5)
         {
-            if (count > N)
+            if (count > N - 1)
             {
                 return;
             }
