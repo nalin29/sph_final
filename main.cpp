@@ -119,15 +119,7 @@ void integrate(SimulationData &simdata)
     {
         simdata.markerParticles.row(i).segment(0, 2) += simdata.force.row(i) * 0.0005;
         simdata.force.row(i) = Eigen::Vector2d(0, -G);
-        simdata.u.row(i) = simdata.markerParticles.row(i).segment(0, 2) - simdata.prevMarkerParticles.row(i).segment(0, 2);
-
-        const double max_vel2 = 4.0f;
-        const double v2 = simdata.u.row(i).squaredNorm();
-
-        if (v2 > max_vel2)
-        {
-            simdata.u.row(i) *= 0.5;
-        }
+        simdata.u.row(i) = (simdata.markerParticles.row(i).segment(0, 2) - simdata.prevMarkerParticles.row(i).segment(0, 2));
 
         simdata.prevMarkerParticles.row(i) = simdata.markerParticles.row(i);
         simdata.markerParticles.row(i).segment(0, 2) += simdata.u.row(i);
