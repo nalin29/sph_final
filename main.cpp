@@ -4,9 +4,9 @@
 #include "polyscope/pick.h"
 #include <igl/jet.h>
 #include <Eigen/Sparse>
+#include <omp.h>
 
 const float G = .005;
-const float rest_density = 3;
 const double GRID_WIDTH = 50;
 const float GRID_BOTTOM = 0;
 bool mouseClicked = false;
@@ -28,6 +28,7 @@ struct SimulationData
     double viscLap;
     double k;
     double k_near;
+    double rest_density;
 
     Eigen::MatrixXd u;
     Eigen::VectorXd p;
@@ -43,11 +44,11 @@ struct SimulationData
 void initSPH(const unsigned int N, SimulationData &simdata)
 {
     int count = 0;
-    for (float y = GRID_BOTTOM + 1; y <= 50000; y += simdata.r * 0.5)
+    for (float y = GRID_BOTTOM + GRID_WIDTH/2; y <= 50000; y += simdata.r * 0.5)
     {
         for (float x = 0; x <= GRID_WIDTH; x += simdata.r * 0.5)
         {
-            if (count > N - 1)
+            if (count > N -1)
             {
                 return;
             }
@@ -113,6 +114,7 @@ void makeGrid(int gridn, SimulationData &result)
 
 void integrate(SimulationData &simdata)
 {
+    #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; i++)
     {
         simdata.markerParticles.row(i).segment(0, 2) += simdata.force.row(i);
@@ -154,7 +156,7 @@ void integrate(SimulationData &simdata)
 
 void computeDensity(SimulationData &simdata)
 {
-
+    #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; i++)
     {
         simdata.density(i) = 0;
@@ -188,17 +190,17 @@ void computeDensity(SimulationData &simdata)
 
 void computePressure(SimulationData &simdata)
 {
-
+    #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; i++)
     {
-        simdata.p(i) = simdata.k * (simdata.density(i) - rest_density);
+        simdata.p(i) = simdata.k * (simdata.density(i) - simdata.rest_density);
         simdata.p_near(i) = simdata.k_near * simdata.density_near(i);
     }
 }
 
 void pressureForce(SimulationData &simdata)
 {
-
+    #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; i++)
     {
         for (int j = 0; j < simdata.nparticles; j++)
@@ -223,7 +225,7 @@ void pressureForce(SimulationData &simdata)
 
 void viscosityForce(SimulationData &simdata)
 {
-
+    #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; ++i)
     {
         for (int j = 0; j < simdata.nparticles; j++)
@@ -257,13 +259,14 @@ int main(int argc, char *argv[])
     SimulationData simdata;
     simdata.viscosity = 0.5;
     simdata.mouseStrength = 100.0;
-    simdata.nparticles = 2048;
+    simdata.nparticles = 1500;
     simdata.gas_const = 2;
     simdata.r = 2.5;
     simdata.k = simdata.gas_const / 1000.f;
     simdata.k_near = simdata.k * 10;
     simdata.viscLap = 40.f / (M_PI * pow(simdata.r, 5.f));
     simdata.mouseStrength = 1.0;
+    simdata.rest_density = 3;
 
     makeGrid(20, simdata);
 
@@ -319,7 +322,8 @@ int main(int argc, char *argv[])
         }
 
         ImGui::InputDouble("Viscosity", &simdata.viscosity, 0.1);
-        ImGui::InputDouble("Mouse Strength", &simdata.mouseStrength, 1);
+        ImGui::InputDouble("Mouse Strength", &simdata.mouseStrength, 0.1);
+        ImGui::InputDouble("Rest Density", &simdata.rest_density, 0.1);
         if (ImGui::InputDouble("Radius of Support", &simdata.r, 0.1))
         {
             simdata.viscLap = 40.f / (M_PI * pow(simdata.r, 5.f));
