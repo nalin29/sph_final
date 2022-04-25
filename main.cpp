@@ -6,7 +6,7 @@
 #include <Eigen/Sparse>
 #include <omp.h>
 
-const float G = .005;
+const float G = 10;
 const double GRID_WIDTH = 50;
 const float GRID_BOTTOM = 0;
 bool mouseClicked = false;
@@ -117,7 +117,7 @@ void integrate(SimulationData &simdata)
     #pragma omp parallel for 
     for (int i = 0; i < simdata.nparticles; i++)
     {
-        simdata.markerParticles.row(i).segment(0, 2) += simdata.force.row(i);
+        simdata.markerParticles.row(i).segment(0, 2) += simdata.force.row(i) * 0.0005;
         simdata.force.row(i) = Eigen::Vector2d(0, -G);
         simdata.u.row(i) = simdata.markerParticles.row(i).segment(0, 2) - simdata.prevMarkerParticles.row(i).segment(0, 2);
 
@@ -133,13 +133,13 @@ void integrate(SimulationData &simdata)
         simdata.markerParticles.row(i).segment(0, 2) += simdata.u.row(i);
 
         if (simdata.markerParticles(i, 0) < -GRID_WIDTH)
-            simdata.force(i, 0) -= (simdata.markerParticles(i, 0) - -GRID_WIDTH) / 5;
+            simdata.force(i, 0) -= (simdata.markerParticles(i, 0) - -GRID_WIDTH) * 400;
         if (simdata.markerParticles(i, 0) > GRID_WIDTH)
-            simdata.force(i, 0) -= (simdata.markerParticles(i, 0) - GRID_WIDTH) / 5;
+            simdata.force(i, 0) -= (simdata.markerParticles(i, 0) - GRID_WIDTH) * 400;
         if (simdata.markerParticles(i, 1) < GRID_BOTTOM)
-            simdata.force(i, 1) -= (simdata.markerParticles(i, 1) - GRID_BOTTOM) / 5;
+            simdata.force(i, 1) -= (simdata.markerParticles(i, 1) - GRID_BOTTOM) * 400;
         if (simdata.markerParticles(i, 1) > 100)
-            simdata.force(i, 1) -= (simdata.markerParticles(i, 1) - 100) / 5;
+            simdata.force(i, 1) -= (simdata.markerParticles(i, 1) - 100) * 400;
 
         if (mouseClicked)
         {
@@ -148,7 +148,7 @@ void integrate(SimulationData &simdata)
 
             if (mouse_dist < max_dist * max_dist)
             {
-                simdata.force.row(i) -= simdata.mouseStrength * (simdata.markerParticles.row(i).segment(0, 2).transpose() - mousePos) / 500.0f;
+                simdata.force.row(i) -= simdata.mouseStrength * (simdata.markerParticles.row(i).segment(0, 2).transpose() - mousePos) * 2;
             }
         }
     }
@@ -257,12 +257,12 @@ int main(int argc, char *argv[])
     polyscope::init();
 
     SimulationData simdata;
-    simdata.viscosity = 0.5;
+    simdata.viscosity = 1000;
     simdata.mouseStrength = 100.0;
     simdata.nparticles = 1500;
-    simdata.gas_const = 2;
+    simdata.gas_const = 4;
     simdata.r = 2.5;
-    simdata.k = simdata.gas_const / 1000.f;
+    simdata.k = simdata.gas_const;
     simdata.k_near = simdata.k * 10;
     simdata.viscLap = 40.f / (M_PI * pow(simdata.r, 5.f));
     simdata.mouseStrength = 1.0;
