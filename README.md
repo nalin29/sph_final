@@ -1,4 +1,4 @@
-# Fluid simulation starter code
+# SPH CODE
 
 Build the project using the standard CMake workflow (please build in release mode):
 
@@ -7,6 +7,7 @@ mkdir build
 cd build
 cmake ..
 make
+./fluid_project
 ```
 
 # Dependencies
