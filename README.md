@@ -7,7 +7,7 @@ mkdir build
 cd build
 cmake ..
 make
-./fluid_project
+./sph_project
 ```
 
 # Dependencies
