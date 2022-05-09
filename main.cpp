@@ -229,7 +229,7 @@ void viscosityForce(SimulationData &simdata)
             if (r_len2 < simdata.r * simdata.r)
             {
                 double r_len = sqrt(r_len2);
-                simdata.force.row(i) += simdata.viscosity * (simdata.u.row(j) - simdata.u.row(i)) / (simdata.density(j) + simdata.density_near(j)) * simdata.viscLap * (simdata.r - r_len);
+                simdata.force.row(i) += 1000 * simdata.viscosity * (simdata.u.row(j) - simdata.u.row(i)) / (simdata.density(j) + simdata.density_near(j)) * simdata.viscLap * (simdata.r - r_len);
             }
         }
     }
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
     polyscope::init();
 
     SimulationData simdata;
-    simdata.viscosity = 1000;
+    simdata.viscosity = 1;
     simdata.mouseStrength = 100.0;
     simdata.nparticles = 1500;
     simdata.gas_const = 4;
